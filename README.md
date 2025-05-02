@@ -1,5 +1,9 @@
 # Pokemon NFT Marketplace
 
+<p align="center">
+  <img src="public/pokeball.png" alt="Pokeball" width="150" height="150"/>
+</p>
+
 A decentralized marketplace for trading Pokemon as NFTs on the Ethereum blockchain (Sepolia testnet). This project combines the beloved world of Pokemon with blockchain technology, allowing users to mint, trade, and auction Pokemon as unique digital assets.
 
 ## Features
