@@ -94,3 +94,9 @@ The marketplace is powered by two main smart contracts:
 - Owner-only administrative functions
 - Emergency pause functionality
 - Comprehensive error handling 
+
+## Legal Disclaimer
+
+Pokémon and all related media, including images and data, are registered trademarks of Nintendo, The Pokémon Company, and Game Freak. This project is for educational purposes only and is not affiliated with, endorsed, sponsored, or specifically approved by Nintendo, The Pokémon Company, or Game Freak.
+
+All Pokémon content and materials are protected by copyright and other intellectual property rights. This project acknowledges these rights and does not claim ownership of any Pokémon-related intellectual property. 
