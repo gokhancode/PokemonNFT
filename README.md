@@ -34,13 +34,13 @@ A decentralized marketplace for trading Pokemon as NFTs on the Ethereum blockcha
 
 The marketplace is powered by two main smart contracts:
 
-1. **PokemonNFT (0xEc61BB4be54571c7Aa7075A9FF6f24F488286134)**
+1. **PokemonNFT**
    - ERC721 compliant
    - Handles Pokemon minting
    - Stores Pokemon metadata and stats
    - Manages ownership and transfers
 
-2. **PokemonTrading (0xacb0F4Dc94838D3Aa015C67a546904a59A50635e)**
+2. **PokemonTrading**
    - Manages listings and auctions
    - Handles secure trading logic
    - Processes payments and transfers
