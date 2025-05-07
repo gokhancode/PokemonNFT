@@ -93,7 +93,7 @@ export default function MintPage() {
                 alt={mintedPokemon.name}
                 className="w-48 h-48 mx-auto mb-4 object-contain"
               />
-                <p className="text-gray-600 mb-6 italic">
+                <p className="text-gray-600 mb-6 italic break-words whitespace-pre-line">
                   {mintedPokemon.description}
                 </p>
               <button

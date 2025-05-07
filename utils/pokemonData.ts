@@ -181,7 +181,9 @@ const csvData = `number,name,type1,type2,hp,attack,defense,speed,special,imageUR
 const lines = csvData.split('\n');
 pokemonData.length = 0; // Clear the array
 for (let i = 1; i < lines.length; i++) { // Skip header row
-  const [number, name, type1, type2, hp, attack, defense, speed, special, imageUrl, description] = lines[i].split(',');
+  const fields = lines[i].split(',');
+  const [number, name, type1, type2, hp, attack, defense, speed, special, imageUrl] = fields;
+  const description = fields.slice(10).join(',').replace(/^"|"$/g, '');
   pokemonData.push({
     number: parseInt(number),
     name,
@@ -193,7 +195,7 @@ for (let i = 1; i < lines.length; i++) { // Skip header row
     speed: parseInt(speed),
     special: parseInt(special),
     imageUrl,
-    description: description.replace(/^"|"$/g, '') // Remove quotes if present
+    description
   });
 }
 

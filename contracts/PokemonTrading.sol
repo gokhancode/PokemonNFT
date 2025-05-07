@@ -51,6 +51,24 @@ contract PokemonTrading is ReentrancyGuard, Ownable, Pausable {
         bool isActive;
     }
 
+    /**
+     * @dev Structure to store Pokemon metadata
+     * @param name The name of the Pokemon
+     * @param pokemonType The type of the Pokemon
+     * @param hp The health points of the Pokemon
+     * @param rarity The rarity of the Pokemon
+     * @param generation The generation of the Pokemon
+     * @param isHolographic Whether the Pokemon is holographic
+     */
+    struct PokemonMetadata {
+        string name;
+        string pokemonType;
+        uint256 hp;
+        uint256 rarity;
+        uint256 generation;
+        bool isHolographic;
+    }
+
     // Mapping from token ID to its listing information
     mapping(uint256 => Listing) public listings;
     // Mapping from token ID to its auction information

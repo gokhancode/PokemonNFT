@@ -1,25 +1,31 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title PokemonNFT
- * @dev An ERC721 contract for Pokemon NFTs with custom metadata and minting functionality
- * Features:
- * - Unique Pokemon cards with stats and metadata
- * - Random stat variations for each minted Pokemon
- * - Custom token URI generation
+ * @dev Implementation of a Pokémon NFT with enhanced security and metadata
+ * @notice This contract handles the creation and management of Pokémon NFTs with stats and metadata
  */
-contract PokemonNFT is ERC721Enumerable, Ownable {
+contract PokemonNFT is ERC721Enumerable, ERC721URIStorage, AccessControl, ReentrancyGuard {
     using Counters for Counters.Counter;
+    using Strings for uint256;
+    
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
     Counters.Counter private _tokenIds;
     uint256 private _nonce;
-
+    
+    // Emergency stop mechanism
+    bool public paused;
+    
     /**
      * @dev Structure to store Pokemon data
      * @param number The Pokemon's Pokedex number
@@ -51,19 +57,59 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
     // Mapping from token ID to Pokemon data
     mapping(uint256 => Pokemon) private pokemons;
 
-    // Event emitted when a new Pokemon is minted
-    event PokemonMinted(address indexed owner, uint256 indexed tokenId, uint256 pokemonNumber);
+    // Events
+    event PokemonMinted(
+        address indexed owner,
+        uint256 indexed tokenId,
+        uint256 pokemonNumber,
+        string name,
+        string type1,
+        string type2
+    );
+    
+    event ContractPaused(address indexed admin);
+    event ContractUnpaused(address indexed admin);
 
     /**
-     * @dev Constructor sets the token name and symbol
+     * @dev Constructor sets the token name and symbol and initializes roles
      */
-    constructor() ERC721("Pokemon Cards", "PKMN") {}
+    constructor() ERC721("Pokemon Cards", "PKMN") {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
+        paused = false;
+    }
+
+    /**
+     * @dev Modifier to check if contract is not paused
+     */
+    modifier whenNotPaused() {
+        require(!paused, "Contract is paused");
+        _;
+    }
+
+    /**
+     * @dev Pause the contract in case of emergency
+     * @notice Can only be called by an admin
+     */
+    function pause() external onlyRole(ADMIN_ROLE) {
+        paused = true;
+        emit ContractPaused(msg.sender);
+    }
+
+    /**
+     * @dev Unpause the contract
+     * @notice Can only be called by an admin
+     */
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        paused = false;
+        emit ContractUnpaused(msg.sender);
+    }
 
     /**
      * @dev Generates a random number between 0 and max-1
      * @param max The upper bound (exclusive)
-     * @return A random number
-     * Note: Uses a combination of block data and sender address for randomness
+     * @return randomNumber A random number
      */
     function _random(uint256 max) private returns (uint256) {
         _nonce++;
@@ -78,18 +124,36 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
     /**
      * @dev Adjusts a stat with a random variation between -10 and +10
      * @param baseStat The base stat value
-     * @return The adjusted stat value
-     * Note: Ensures the final stat stays between 0 and 250
+     * @return adjustedStat The adjusted stat value
      */
     function _adjustStat(uint256 baseStat) private returns (uint256) {
-        // Generate random number between 0 and 20
         uint256 variation = _random(21);
-        // Convert to range -10 to +10
         int256 adjusted = int256(baseStat) + int256(variation) - 10;
-        // Ensure stat stays between 0 and 250
         if (adjusted < 0) return 0;
         if (adjusted > 250) return 250;
         return uint256(adjusted);
+    }
+
+    /**
+     * @dev Creates the metadata JSON for a Pokemon
+     * @param pokemon The Pokemon data
+     * @return metadata The JSON string containing the Pokemon's metadata
+     */
+    function _createMetadataJSON(Pokemon memory pokemon) private pure returns (string memory) {
+        return string(abi.encodePacked(
+            '{"name":"', pokemon.name, ' #', Strings.toString(pokemon.number), '",',
+            '"description":"', pokemon.description, '",',
+            '"image":"', pokemon.imageUrl, '",',
+            '"attributes":[',
+            '{"trait_type":"Type 1","value":"', pokemon.type1, '"},',
+            '{"trait_type":"Type 2","value":"', pokemon.type2, '"},',
+            '{"trait_type":"HP","value":', Strings.toString(pokemon.hp), '},',
+            '{"trait_type":"Attack","value":', Strings.toString(pokemon.attack), '},',
+            '{"trait_type":"Defense","value":', Strings.toString(pokemon.defense), '},',
+            '{"trait_type":"Speed","value":', Strings.toString(pokemon.speed), '},',
+            '{"trait_type":"Special","value":', Strings.toString(pokemon.special), '}',
+            ']}'
+        ));
     }
 
     /**
@@ -105,7 +169,6 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
      * @param _special The Pokemon's base Special stat
      * @param _imageUrl URL to the Pokemon's image
      * @param _description A description of the Pokemon
-     * Note: Each stat will be randomly adjusted by -10 to +10 points
      */
     function mintPokemon(
         uint256 _number,
@@ -119,12 +182,16 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
         uint256 _special,
         string memory _imageUrl,
         string memory _description
-    ) public {
+    ) public whenNotPaused nonReentrant {
+        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_type1).length > 0, "Type1 cannot be empty");
+        require(_hp > 0, "HP must be greater than zero");
+
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
 
-        // Create Pokemon struct with adjusted stats in a single step
-        pokemons[newTokenId] = Pokemon({
+        Pokemon memory newPokemon = Pokemon({
             number: _number,
             name: _name,
             type1: _type1,
@@ -138,9 +205,21 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
             description: _description
         });
 
+        pokemons[newTokenId] = newPokemon;
         _safeMint(msg.sender, newTokenId);
+        
+        // Set the token URI using ERC721URIStorage
+        string memory metadata = _createMetadataJSON(newPokemon);
+        _setTokenURI(newTokenId, metadata);
 
-        emit PokemonMinted(msg.sender, newTokenId, _number);
+        emit PokemonMinted(
+            msg.sender,
+            newTokenId,
+            _number,
+            _name,
+            _type1,
+            _type2
+        );
     }
 
     /**
@@ -150,15 +229,13 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
      * @return name The Pokemon's name
      * @return type1 The Pokemon's primary type
      * @return type2 The Pokemon's secondary type
-     * @return hp The Pokemon's HP stat (with random variation)
-     * @return attack The Pokemon's Attack stat (with random variation)
-     * @return defense The Pokemon's Defense stat (with random variation)
-     * @return speed The Pokemon's Speed stat (with random variation)
-     * @return special The Pokemon's Special stat (with random variation)
+     * @return hp The Pokemon's HP stat
+     * @return attack The Pokemon's Attack stat
+     * @return defense The Pokemon's Defense stat
+     * @return speed The Pokemon's Speed stat
+     * @return special The Pokemon's Special stat
      * @return imageUrl URL to the Pokemon's image
      * @return description A description of the Pokemon
-     * Requirements:
-     * - Token must exist
      */
     function getPokemon(uint256 tokenId) public view returns (
         uint256 number,
@@ -190,31 +267,63 @@ contract PokemonNFT is ERC721Enumerable, Ownable {
         );
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal virtual override(ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    /**
+     * @dev Grant the minter role to a new address
+     * @param minter Address to receive the minter role
+     */
+    function addMinter(address minter) external onlyRole(ADMIN_ROLE) {
+        grantRole(MINTER_ROLE, minter);
     }
 
     /**
-     * @dev Returns the metadata URI for a token
-     * @param tokenId The ID of the token to query
-     * @return A base64 encoded JSON string containing the token's metadata
-     * Requirements:
-     * - Token must exist
-     * Note: Includes only the most basic metadata
+     * @dev Remove the minter role from an address
+     * @param minter Address to lose the minter role
      */
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "Token does not exist");
-        Pokemon memory pokemon = pokemons[tokenId];
-        
-        return string(abi.encodePacked(
-            'data:application/json,',
-            '{"name":"', pokemon.name, ' #', Strings.toString(pokemon.number), '",',
-            '"image":"', pokemon.imageUrl, '"}'
-        ));
+    function removeMinter(address minter) external onlyRole(ADMIN_ROLE) {
+        revokeRole(MINTER_ROLE, minter);
+    }
+
+    /**
+     * @dev Required override for _beforeTokenTransfer
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+    }
+
+    /**
+     * @dev Required override for tokenURI
+     */
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    /**
+     * @dev Required override for supportsInterface
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721Enumerable, ERC721URIStorage, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev Required override for _burn
+     */
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+        delete pokemons[tokenId];
     }
 } 

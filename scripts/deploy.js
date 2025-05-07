@@ -6,14 +6,17 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
 
-  // Use the already deployed PokemonNFT address
-  const pokemonNFTAddress = "0xEc61BB4be54571c7Aa7075A9FF6f24F488286134";
-  console.log("Using existing PokemonNFT at:", pokemonNFTAddress);
+  // Deploy PokemonNFT
+  console.log("\nDeploying PokemonNFT...");
+  const PokemonNFT = await hre.ethers.getContractFactory("PokemonNFT");
+  const pokemonNFT = await PokemonNFT.deploy();
+  await pokemonNFT.deployed();
+  console.log("PokemonNFT deployed to:", pokemonNFT.address);
 
   // Deploy PokemonTrading
   console.log("\nDeploying PokemonTrading...");
   const PokemonTrading = await hre.ethers.getContractFactory("PokemonTrading");
-  const pokemonTrading = await PokemonTrading.deploy(pokemonNFTAddress);
+  const pokemonTrading = await PokemonTrading.deploy(pokemonNFT.address);
   await pokemonTrading.deployed();
   console.log("PokemonTrading deployed to:", pokemonTrading.address);
 
@@ -29,10 +32,10 @@ async function main() {
   if (envContent.includes('NEXT_PUBLIC_POKEMON_NFT_ADDRESS=')) {
     envContent = envContent.replace(
       /NEXT_PUBLIC_POKEMON_NFT_ADDRESS=.*/,
-      `NEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFTAddress}`
+      `NEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFT.address}`
     );
   } else {
-    envContent += `\nNEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFTAddress}`;
+    envContent += `\nNEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFT.address}`;
   }
 
   // Update or add PokemonTrading address

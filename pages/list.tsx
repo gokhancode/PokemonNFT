@@ -253,7 +253,7 @@ export default function ListPage() {
         tx = await pokemonTrading.startAuction(
           selectedPokemon.tokenId,
           ethers.utils.parseEther(startingBid),
-          parseInt(auctionDuration) * 60 * 60 // Convert hours to seconds
+          Math.floor(parseFloat(auctionDuration) * 60 * 60) // Convert hours to seconds, handling decimals
         );
       }
 
