@@ -28,28 +28,43 @@ async function main() {
     envContent = fs.readFileSync(envPath, 'utf8');
   }
 
-  // Update or add PokemonNFT address
-  if (envContent.includes('NEXT_PUBLIC_POKEMON_NFT_ADDRESS=')) {
-    envContent = envContent.replace(
-      /NEXT_PUBLIC_POKEMON_NFT_ADDRESS=.*/,
-      `NEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFT.address}`
-    );
-  } else {
-    envContent += `\nNEXT_PUBLIC_POKEMON_NFT_ADDRESS=${pokemonNFT.address}`;
-  }
+  // Update or add contract addresses
+  const updates = {
+    'NEXT_PUBLIC_POKEMON_NFT_ADDRESS': pokemonNFT.address,
+    'NEXT_PUBLIC_POKEMON_TRADING_ADDRESS': pokemonTrading.address
+  };
 
-  // Update or add PokemonTrading address
-  if (envContent.includes('NEXT_PUBLIC_POKEMON_TRADING_ADDRESS=')) {
-    envContent = envContent.replace(
-      /NEXT_PUBLIC_POKEMON_TRADING_ADDRESS=.*/,
-      `NEXT_PUBLIC_POKEMON_TRADING_ADDRESS=${pokemonTrading.address}`
-    );
-  } else {
-    envContent += `\nNEXT_PUBLIC_POKEMON_TRADING_ADDRESS=${pokemonTrading.address}`;
+  for (const [key, value] of Object.entries(updates)) {
+    if (envContent.includes(`${key}=`)) {
+      envContent = envContent.replace(
+        new RegExp(`${key}=.*`),
+        `${key}=${value}`
+      );
+    } else {
+      envContent += `\n${key}=${value}`;
+    }
   }
 
   fs.writeFileSync(envPath, envContent);
   console.log("\nUpdated .env.local with new contract addresses");
+
+  // Verify contracts on Etherscan
+  console.log("\nVerifying contracts on Etherscan...");
+  try {
+    await hre.run("verify:verify", {
+      address: pokemonNFT.address,
+      constructorArguments: [],
+    });
+    console.log("PokemonNFT verified on Etherscan");
+
+    await hre.run("verify:verify", {
+      address: pokemonTrading.address,
+      constructorArguments: [pokemonNFT.address],
+    });
+    console.log("PokemonTrading verified on Etherscan");
+  } catch (error) {
+    console.error("Verification failed:", error);
+  }
 }
 
 main()

@@ -1,15 +1,17 @@
 const hre = require("hardhat");
 const fs = require('fs');
 const csv = require('csv-parser');
+require('dotenv').config({ path: '.env.local' });
 
 async function main() {
-  // Read the contract address from .env.local
-  const envContent = fs.readFileSync('.env.local', 'utf8');
-  const nftAddressMatch = envContent.match(/NEXT_PUBLIC_POKEMON_NFT_ADDRESS=(.*)/);
-  if (!nftAddressMatch) {
-    throw new Error('Could not find NFT contract address in .env.local');
+  const [signer] = await hre.ethers.getSigners();
+  console.log("Bulk minting with account:", signer.address);
+
+  // Get contract address
+  const nftAddress = process.env.NEXT_PUBLIC_POKEMON_NFT_ADDRESS;
+  if (!nftAddress) {
+    throw new Error('NFT contract address not found in .env.local');
   }
-  const nftAddress = "0xEc61BB4be54571c7Aa7075A9FF6f24F488286134";
   console.log("Using NFT contract at:", nftAddress);
 
   const PokemonNFT = await hre.ethers.getContractFactory("PokemonNFT");
@@ -24,12 +26,19 @@ async function main() {
     .on('end', async () => {
       console.log(`Found ${results.length} Pokemon to mint`);
       
-      // Only mint the first 3 Pokemon for now
-      const pokemonToMint = results.slice(0, 3);
+      // Get current total supply
+      const totalSupply = await pokemonNFT.totalSupply();
+      console.log("Current total supply:", totalSupply.toString());
+      
+      // Calculate how many more we can mint (assuming max supply is 151)
+      const maxToMint = 151 - totalSupply.toNumber();
+      const pokemonToMint = results.slice(0, maxToMint);
+      
+      console.log(`Will mint ${pokemonToMint.length} Pokemon`);
       
       for (const pokemon of pokemonToMint) {
         try {
-          console.log(`Minting ${pokemon.name}...`);
+          console.log(`\nMinting ${pokemon.name}...`);
           
           const tx = await pokemonNFT.mintPokemon(
             parseInt(pokemon.number),
@@ -45,8 +54,14 @@ async function main() {
             pokemon.description
           );
           
-          await tx.wait();
-          console.log(`Successfully minted ${pokemon.name}!`);
+          console.log("Transaction sent, waiting for confirmation...");
+          const receipt = await tx.wait();
+          
+          // Get the token ID from the event
+          const event = receipt.events.find(e => e.event === "PokemonMinted");
+          const tokenId = event.args.tokenId;
+          
+          console.log(`Successfully minted ${pokemon.name}! Token ID: ${tokenId}`);
           
           // Add a small delay between mints to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -56,7 +71,10 @@ async function main() {
         }
       }
       
-      console.log("Minting process completed!");
+      // Get final total supply
+      const finalSupply = await pokemonNFT.totalSupply();
+      console.log("\nMinting process completed!");
+      console.log("Final total supply:", finalSupply.toString());
       process.exit(0);
     });
 }
