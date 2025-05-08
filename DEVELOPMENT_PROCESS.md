@@ -1,49 +1,17 @@
-# Development Process Report
+We are writing this document to report the development process of this project and the distribution of the workload among the group members Tibet Atakan, Yigit Uyanik and Gokhan Korkut. 
 
-## Project Development and Workload Distribution
-**Team Members:** Tibet Atakan, Yigit Uyanik, and Gokhan Korkut
+Firstly, we decided that all members of our group write their own smart contracts using three different Gen-AI assistance, namely Cursor, Chat-GPT and Claude AI. This aimed to help each of us to understand the essentials of smart contract design and enable more individual creativity. Afterwards, we met in person and discussed the alternative smart contracts and built final contracts taking the best ideas and simplest designs from different implementations. 
 
-### Smart Contract Development
-We adopted a unique approach to smart contract development by having each team member write their own smart contracts using different Gen-AI assistance tools:
-- Cursor
-- Chat-GPT
-- Claude AI
+None of our group members had experience with graphic UI design so for the frontend development part we used Gen-AI tools to realize our design ideas. This is done by each member of our team adding design ideas until we reach a UI that satisfies our needs and wishes. 
 
-This strategy was chosen to:
-- Help each team member understand the essentials of smart contract design
-- Enable individual creativity and learning
-- Generate diverse perspectives on contract implementation
+Finally we shared the documentation and presentation part as follows: Gokhan Korkut did the video presentation of the project, Tibet Atakan created the detailed README.md file with setup instructions and Yigit Uyanik wrote this report and the detailed comments in the smart contracts.We are writing this document to report the development process of this project and the distribution of the workload among the group members Tibet Atakan, Yigit Uyanik and Gokhan Korkut. 
 
-After individual development, we conducted in-person meetings to:
-- Discuss alternative smart contracts
-- Compare different implementations
-- Build final contracts by combining the best ideas
-- Select the simplest and most effective designs
+Firstly, we decided that all members of our group write their own smart contracts using three different Gen-AI assistance, namely Cursor, Chat-GPT and Claude AI. This aimed to help each of us to understand the essentials of smart contract design and enable more individual creativity. Afterwards, we met in person and discussed the alternative smart contracts and built final contracts taking the best ideas and simplest designs from different implementations. 
 
-### Frontend Development
-As none of our team members had prior experience with graphic UI design, we leveraged Gen-AI tools to:
-- Realize our design ideas
-- Create a user-friendly interface
-- Implement our vision for the project
+None of our group members had experience with graphic UI design so for the frontend development part we used Gen-AI tools to realize our design ideas. This is done by each member of our team adding design ideas until we reach a UI that satisfies our needs and wishes. 
 
-The frontend development process was collaborative, with each team member:
-- Contributing design ideas
-- Iterating on the UI
-- Working together until we achieved a satisfactory design
+Finally we shared the documentation and presentation part as follows: Gokhan Korkut did the video presentation of the project, Tibet Atakan created the detailed README.md file with setup instructions and Yigit Uyanik wrote this report and the detailed comments in the smart contracts.
 
-### Documentation and Presentation
-The final phase of the project was distributed as follows:
-
-1. **Gokhan Korkut**
-   - Created the video presentation of the project
-   - Designed the general UI concept for the frontend
-
-2. **Tibet Atakan**
-   - Developed the detailed README.md file
-   - Included comprehensive setup instructions
-
-3. **Yigit Uyanik**
-   - Wrote this development process report
-   - Added detailed comments in the smart contracts
-
-This distribution of responsibilities ensured that each team member could contribute their strengths to the project's success while maintaining clear documentation and presentation materials. 
+Gökhan Korkut 24-923-179
+Tibet Atakan 23-950-264
+Yiğit Uyanık 23-944-473
