@@ -72,6 +72,42 @@ The marketplace is powered by two main smart contracts:
 
 ---
 
+### Environment Files Setup
+Create the following environment files in the root directory:
+
+1. Create `.env` file for Hardhat configuration:
+```sh
+# Your wallet private key (keep this secret!)
+PRIVATE_KEY=your_wallet_private_key_here
+
+# Sepolia RPC URL (get from Infura or Alchemy)
+NEXT_PUBLIC_SEPOLIA_RPC_URL=your_sepolia_rpc_url_here
+
+# Contract addresses (update after deployment)
+NEXT_PUBLIC_POKEMON_NFT_ADDRESS=your_nft_contract_address
+NEXT_PUBLIC_POKEMON_TRADING_ADDRESS=your_trading_contract_address
+```
+
+2. Create `.env.local` file for Next.js configuration:
+```sh
+# Contract addresses (same as in .env)
+NEXT_PUBLIC_POKEMON_NFT_ADDRESS=your_nft_contract_address
+NEXT_PUBLIC_POKEMON_TRADING_ADDRESS=your_trading_contract_address
+
+# RPC URL (same as in .env)
+NEXT_PUBLIC_SEPOLIA_RPC_URL=your_sepolia_rpc_url_here
+```
+
+Important notes:
+- Never commit either `.env` or `.env.local` to version control
+- Keep your private key secure and never share it
+- Get a Sepolia RPC URL from providers like Infura or Alchemy
+- Update contract addresses after deployment
+- For local development, you can use the provided contract addresses
+- Both files are needed as `.env` is used by Hardhat and `.env.local` by Next.js
+
+---
+
 ### 1. Clone the Repository
 ```sh
 git clone https://github.com/gokhancode/PokemonNFT.git
