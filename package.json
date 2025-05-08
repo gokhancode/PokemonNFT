@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --legacy-peer-deps && next build",
+    "build": "npm install --legacy-peer-deps && npm install --save-dev typescript @types/react @types/node --legacy-peer-deps && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "hardhat test",
