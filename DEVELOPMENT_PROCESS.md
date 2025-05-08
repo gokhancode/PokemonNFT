@@ -12,6 +12,8 @@ None of our group members had experience with graphic UI design so for the front
 
 Finally we shared the documentation and presentation part as follows: Gokhan Korkut did the video presentation of the project, Tibet Atakan created the detailed README.md file with setup instructions and Yigit Uyanik wrote this report and the detailed comments in the smart contracts.
 
+
+
 Gökhan Korkut 24-923-179
 Tibet Atakan 23-950-264
 Yiğit Uyanık 23-944-473

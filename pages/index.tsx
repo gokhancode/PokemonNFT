@@ -38,7 +38,10 @@ export default function Marketplace() {
   }, [pokemonNFT, pokemonTrading]);
 
   const loadCards = async () => {
-    if (!pokemonNFT || !pokemonTrading || !account) return;
+    if (!pokemonNFT || !pokemonTrading) {
+      console.log('Contracts not initialized:', { pokemonNFT: !!pokemonNFT, pokemonTrading: !!pokemonTrading });
+      return;
+    }
 
     try {
       setLoading(true);
@@ -177,8 +180,8 @@ export default function Marketplace() {
               description
             ] = pokemon;
           
-          loadedCards.push({
-            tokenId: tokenId.toNumber(),
+            loadedCards.push({
+              tokenId: tokenId.toNumber(),
               name: name || 'Unknown Pokemon',
               type1: type1 || 'Unknown',
               type2: type2 || '',
@@ -192,9 +195,9 @@ export default function Marketplace() {
               isAuction: true,
               auctionEndTime: auction.endTime.toNumber(),
               highestBid: ethers.utils.formatEther(auction.highestBid),
-            auctionSeller: auction.seller,
-            highestBidder: auction.highestBidder
-          });
+              auctionSeller: auction.seller,
+              highestBidder: auction.highestBidder
+            });
             processedTokens.add(tokenId.toString());
           }
         } catch (error) {
@@ -336,53 +339,58 @@ export default function Marketplace() {
                       special={card.special}
                     />
                   </div>
-                  {card.price && (
+                  {card.isAuction ? (
                     <div className="mt-4">
-                      <p className="text-lg font-medium text-gray-900">
-                        Price: {card.price} ETH
-                      </p>
-                      <button
-                        onClick={() => handleBuy(card)}
-                        className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                      >
-                        <FaEthereum className="mr-2" />
-                        Buy Now
-                      </button>
-                    </div>
-                  )}
-                  {card.isAuction && (
-                    <div className="mt-4">
-                      <p className="text-lg font-medium text-gray-900">
-                        Current Bid: {card.highestBid || "0"} ETH
-                      </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">Current Bid: {card.highestBid || '0'} ETH</p>
+                      <p className="text-sm text-gray-600 mb-2">
                         Ends: {new Date(card.auctionEndTime! * 1000).toLocaleString()}
                       </p>
-                      {card.auctionSeller?.toLowerCase() === account?.toLowerCase() && card.highestBidder && (
+                      {account ? (
+                        card.auctionSeller?.toLowerCase() !== account?.toLowerCase() && (
+                          <div className="mt-2">
+                            <input
+                              type="number"
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(e.target.value)}
+                              placeholder="Enter bid amount"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            />
+                            <button
+                              onClick={() => handleBid(card)}
+                              className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                            >
+                              <FaEthereum className="mr-2" />
+                              Place Bid
+                            </button>
+                          </div>
+                        )
+                      ) : (
                         <button
-                          onClick={() => handleEndAuction(card)}
-                          className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                          disabled
+                          className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
                         >
-                          Accept Highest Bid
+                          Connect to Bid
                         </button>
                       )}
-                      {card.auctionSeller?.toLowerCase() !== account?.toLowerCase() && (
-                        <div className="mt-2">
-                          <input
-                            type="number"
-                            value={bidAmount}
-                            onChange={(e) => setBidAmount(e.target.value)}
-                            placeholder="Enter bid amount"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          />
-                          <button
-                            onClick={() => handleBid(card)}
-                            className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                          >
-                            <FaEthereum className="mr-2" />
-                            Place Bid
-                          </button>
-                        </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Price: {card.price} ETH</p>
+                      {account ? (
+                        <button
+                          onClick={() => handleBuy(card)}
+                          className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                        >
+                          <FaEthereum className="mr-2" />
+                          Buy Now
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
+                        >
+                          Connect to Buy
+                        </button>
                       )}
                     </div>
                   )}

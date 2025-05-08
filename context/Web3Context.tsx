@@ -124,24 +124,44 @@ export const Web3ProviderWrapper: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Initialize contracts when library and account are available
   useEffect(() => {
-    if (library && account) {
-      console.log('Initializing contracts with:', {
-        nftAddress: POKEMON_NFT_ADDRESS,
-        tradingAddress: POKEMON_TRADING_ADDRESS
-      });
-      
+    const initializeContracts = async () => {
       try {
-        const signer = library.getSigner();
+        // Create a provider using the Sepolia RPC URL
+        const sepoliaRpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+        if (!sepoliaRpcUrl) {
+          console.error('Sepolia RPC URL not found in environment variables');
+          return;
+        }
+
+        const provider = new ethers.providers.JsonRpcProvider(sepoliaRpcUrl);
+        
+        console.log('Initializing contracts with:', {
+          nftAddress: POKEMON_NFT_ADDRESS,
+          tradingAddress: POKEMON_TRADING_ADDRESS,
+          hasLibrary: !!library,
+          hasAccount: !!account,
+          rpcUrl: sepoliaRpcUrl
+        });
+        
+        // Use library if available (connected wallet), otherwise use the provider
+        const signer = library ? (account ? library.getSigner() : library) : provider;
+        
         const nftContract = new ethers.Contract(POKEMON_NFT_ADDRESS, POKEMON_NFT_ABI, signer);
         const tradingContract = new ethers.Contract(POKEMON_TRADING_ADDRESS, POKEMON_TRADING_ABI, signer);
+        
+        // Test the connection
+        await provider.getNetwork();
         
         console.log('Contracts initialized successfully');
         setPokemonNFT(nftContract);
         setPokemonTrading(tradingContract);
       } catch (error) {
         console.error('Error initializing contracts:', error);
+        setError('Failed to connect to the network. Please check your internet connection and try again.');
       }
-    }
+    };
+
+    initializeContracts();
   }, [library, account]);
 
   return (
