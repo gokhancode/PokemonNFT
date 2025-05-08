@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/*
+The following imports are used for:
+- ReentrancyGuard: For safety against reentrancy attacks on ETH-handling functions (buyPokemon, placeBid, withdraw).
+- IERC721: To have a minimal NFT interface so the market can call ownerOf and transferFrom.
+- Ownable: To restrict certain functions to the contract owner (pause, unpause, emergencyRecoverToken).
+- Pausable: To allow the contract owner to pause and unpause the contract, preventing new listings, purchases, 
+  and auctions during maintenance or emergencies.
+*/ 
+
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,6 +25,10 @@ import "@openzeppelin/contracts/security/Pausable.sol";
  * - Secure fund handling with ReentrancyGuard
  * - Owner-only functions for contract management
  * - Emergency stop functionality
+ */
+
+ /* Contract inherits from ReentranceGuard IERC721, Ownable, Pausable; which is safe because it uses OpenZeppelin libraries,
+ which are designed to work together.
  */
 contract PokemonTrading is ReentrancyGuard, Ownable, Pausable {
     // The Pokemon NFT contract interface
@@ -88,6 +101,7 @@ contract PokemonTrading is ReentrancyGuard, Ownable, Pausable {
     /**
      * @dev Constructor initializes the contract with the Pokemon NFT contract address
      * @param _pokemonNFTAddress The address of the Pokemon NFT contract
+     * @notice Hard-wires a single Pokémon-card collection; every trade must involve that contract.
      */
     constructor(address _pokemonNFTAddress) {
         pokemonNFT = IERC721(_pokemonNFTAddress);
@@ -104,12 +118,12 @@ contract PokemonTrading is ReentrancyGuard, Ownable, Pausable {
      * - Pokemon must not be already listed or in auction
      */
     function listPokemon(uint256 tokenId, uint256 price) external whenNotPaused {
-        require(pokemonNFT.ownerOf(tokenId) == msg.sender, "Not the owner");
-        require(price > 0, "Price must be greater than 0");
-        require(!listings[tokenId].isActive, "Already listed");
-        require(!auctions[tokenId].isActive, "In auction");
+        require(pokemonNFT.ownerOf(tokenId) == msg.sender, "Not the owner"); // Check if the caller is the owner of the token
+        require(price > 0, "Price must be greater than 0"); // Check if the price is greater than 0
+        require(!listings[tokenId].isActive, "Already listed"); // Check if the token is already listed
+        require(!auctions[tokenId].isActive, "In auction"); // Check if the token is already in auction
 
-        pokemonNFT.transferFrom(msg.sender, address(this), tokenId);
+        pokemonNFT.transferFrom(msg.sender, address(this), tokenId); // Transfer the token to the contract
         
         listings[tokenId] = Listing({
             seller: msg.sender,

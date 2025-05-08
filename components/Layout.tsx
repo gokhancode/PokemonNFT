@@ -57,12 +57,12 @@ export default function Layout({ children }: LayoutProps) {
                     {shortenAddress(account)}
                   </span>
                   <div className="relative group">
-                    <button
-                      onClick={disconnectWallet}
-                      className="flex items-center px-4 py-2 border-2 border-white text-sm font-medium rounded-md text-white hover:bg-white hover:text-pokemon-red transition-colors duration-200"
-                    >
-                      Disconnect
-                    </button>
+                  <button
+                    onClick={disconnectWallet}
+                    className="flex items-center px-4 py-2 border-2 border-white text-sm font-medium rounded-md text-white hover:bg-white hover:text-pokemon-red transition-colors duration-200"
+                  >
+                    Disconnect
+                  </button>
                     <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-72 bg-white text-pokemon-red text-base font-bold rounded-lg border-2 border-pokemon-red shadow-lg px-4 py-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex flex-col items-center">
                       <span>
                         If you are using MetaMask, you may need to connect, disconnect, or change accounts directly in the MetaMask extension for full control.
