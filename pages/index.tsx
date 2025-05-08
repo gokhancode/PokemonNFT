@@ -27,7 +27,7 @@ interface PokemonCard {
 }
 
 export default function Marketplace() {
-  const { account, pokemonNFT, pokemonTrading } = useWeb3();
+  const { account, pokemonNFT, pokemonTrading, connectWallet } = useWeb3();
   const [cards, setCards] = useState<PokemonCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
@@ -283,120 +283,175 @@ export default function Marketplace() {
   };
 
   return (
-    <Layout>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="relative w-72 h-72 mx-auto">
-              <Image
-                src="/pokeball-loading.gif"
-                alt="Loading Pokemon marketplace"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
-            <p className="mt-8 text-gray-600 text-2xl">Loading Pokemon marketplace...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card) => (
-              <div
-                key={card.tokenId}
-                className="bg-white overflow-hidden shadow rounded-lg"
-              >
-                <div className="p-6">
-                  <div className="relative w-32 h-32 mx-auto mb-4">
-                    <Image
-                      src={card.imageUrl || '/placeholder-pokemon.png'}
-                      alt={`${card.name} Pokemon`}
-                      fill
-                      sizes="128px"
-                      className="object-contain"
-                      priority
-                    />
-                  </div>
-                  <h3 className="text-lg font-medium text-center mb-4">{card.name}</h3>
-                  <div className="flex justify-center space-x-2 mb-4">
-                    <span className="px-2 py-1 bg-pokemon-red text-white rounded-full text-sm">
-                      {card.type1}
-                    </span>
-                    {card.type2 && (
-                      <span className="px-2 py-1 bg-pokemon-blue text-white rounded-full text-sm">
-                        {card.type2}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <PokemonStats
-                      hp={card.hp}
-                      attack={card.attack}
-                      defense={card.defense}
-                      speed={card.speed}
-                      special={card.special}
-                    />
-                  </div>
-                  {card.price && (
-                    <div className="mt-4">
-                      <p className="text-lg font-medium text-gray-900">
-                        Price: {card.price} ETH
-                      </p>
-                      <button
-                        onClick={() => handleBuy(card)}
-                        className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                      >
-                        <FaEthereum className="mr-2" />
-                        Buy Now
-                      </button>
-                    </div>
-                  )}
-                  {card.isAuction && (
-                    <div className="mt-4">
-                      <p className="text-lg font-medium text-gray-900">
-                        Current Bid: {card.highestBid || "0"} ETH
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Ends: {new Date(card.auctionEndTime! * 1000).toLocaleString()}
-                      </p>
-                      {card.auctionSeller?.toLowerCase() === account?.toLowerCase() && card.highestBidder && (
-                        <button
-                          onClick={() => handleEndAuction(card)}
-                          className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                        >
-                          Accept Highest Bid
-                        </button>
-                      )}
-                      {card.auctionSeller?.toLowerCase() !== account?.toLowerCase() && (
-                        <div className="mt-2">
-                          <input
-                            type="number"
-                            value={bidAmount}
-                            onChange={(e) => setBidAmount(e.target.value)}
-                            placeholder="Enter bid amount"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          />
-                          <button
-                            onClick={() => handleBid(card)}
-                            className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                          >
-                            <FaEthereum className="mr-2" />
-                            Place Bid
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+    <>
+      {/* Video Background - Bottom most layer */}
+      <div className="fixed top-0 left-0 w-full h-full -z-50">
+        <video
+          autoPlay
+          loop={true}
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+          controlsList="nodownload noplaybackrate"
+          onEnded={(e) => {
+            const video = e.target as HTMLVideoElement;
+            video.play().catch(error => console.log('Video autoplay failed:', error));
+          }}
+        >
+          <source src="https://res.cloudinary.com/daoe0uin9/video/upload/v1746731701/background.mp4" type="video/mp4" />
+        </video>
+      </div>
+
+      {/* Black overlay - Second bottom most layer */}
+      <div className="fixed top-0 left-0 w-full h-full -z-40 bg-black bg-opacity-30" />
+
+      <Layout>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          {!account ? (
+            <div className="text-center py-16 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg">
+              <div className="relative w-72 h-72 mx-auto transform hover:scale-105 transition-transform duration-300">
+                <Image
+                  src="/pokeball-loading.gif"
+                  alt="Welcome to Pokemon NFT Marketplace"
+                  fill
+                  className="object-contain drop-shadow-xl"
+                  priority
+                />
+              </div>
+              <div className="max-w-2xl mx-auto px-4">
+                <h1 className="mt-8 text-4xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-blue-600">
+                  Welcome to Pokemon NFT Marketplace
+                </h1>
+                <p className="mt-4 text-xl text-gray-600">
+                  Connect your wallet to start trading Pokemon NFTs
+                </p>
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => connectWallet()}
+                    className="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <FaEthereum className="text-xl" />
+                    <span>Connect Wallet</span>
+                  </button>
                 </div>
               </div>
-            ))}
-            {cards.length === 0 && (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                No Pokemon listed in the marketplace
+            </div>
+          ) : loading ? (
+            <div className="text-center py-16 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg">
+              <div className="relative w-72 h-72 mx-auto">
+                <Image
+                  src="/pokeball-loading.gif"
+                  alt="Loading Pokemon marketplace"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
-            )}
-          </div>
-        )}
-      </main>
-    </Layout>
+              <p className="mt-8 text-gray-600 text-2xl">Loading Pokemon marketplace...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {cards.map((card) => (
+                <div
+                  key={card.tokenId}
+                  className="bg-white/60 backdrop-blur-sm overflow-hidden shadow rounded-lg"
+                >
+                  <div className="p-6">
+                    <div className="relative w-32 h-32 mx-auto mb-4">
+                      <Image
+                        src={card.imageUrl || '/placeholder-pokemon.png'}
+                        alt={`${card.name} Pokemon`}
+                        fill
+                        sizes="128px"
+                        className="object-contain"
+                        priority
+                      />
+                    </div>
+                    <h3 className="text-lg font-medium text-center mb-4">{card.name}</h3>
+                    <div className="flex justify-center space-x-2 mb-4">
+                      <span className="px-2 py-1 bg-pokemon-red text-white rounded-full text-sm">
+                        {card.type1}
+                      </span>
+                      {card.type2 && (
+                        <span className="px-2 py-1 bg-pokemon-blue text-white rounded-full text-sm">
+                          {card.type2}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <PokemonStats
+                        hp={card.hp}
+                        attack={card.attack}
+                        defense={card.defense}
+                        speed={card.speed}
+                        special={card.special}
+                      />
+                    </div>
+                    {card.price && (
+                      <div className="mt-4">
+                        <p className="text-lg font-medium text-gray-900">
+                          Price: {card.price} ETH
+                        </p>
+                        <button
+                          onClick={() => handleBuy(card)}
+                          className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                        >
+                          <FaEthereum className="mr-2" />
+                          Buy Now
+                        </button>
+                      </div>
+                    )}
+                    {card.isAuction && (
+                      <div className="mt-4">
+                        <p className="text-lg font-medium text-gray-900">
+                          Current Bid: {card.highestBid || "0"} ETH
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Ends: {new Date(card.auctionEndTime! * 1000).toLocaleString()}
+                        </p>
+                        {card.auctionSeller?.toLowerCase() === account?.toLowerCase() && card.highestBidder && (
+                          <button
+                            onClick={() => handleEndAuction(card)}
+                            className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                          >
+                            Accept Highest Bid
+                          </button>
+                        )}
+                        {card.auctionSeller?.toLowerCase() !== account?.toLowerCase() && (
+                          <div className="mt-2">
+                            <input
+                              type="number"
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(e.target.value)}
+                              placeholder="Enter bid amount"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            />
+                            <button
+                              onClick={() => handleBid(card)}
+                              className="mt-2 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                            >
+                              <FaEthereum className="mr-2" />
+                              Place Bid
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {cards.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No Pokemon listed in the marketplace
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </Layout>
+    </>
   );
 } 

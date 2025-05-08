@@ -74,8 +74,8 @@ export default function MintPage() {
             video.play().catch(error => console.log('Video autoplay failed:', error));
           }}
         >
-          <source src="/background.mp4" type="video/mp4" />
-        </video>
+          <source src="https://res.cloudinary.com/daoe0uin9/video/upload/v1746731701/background.mp4" type="video/mp4" />
+          </video>
       </div>
 
       {/* Black overlay - Second bottom most layer */}
